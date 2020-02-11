@@ -1,0 +1,839 @@
+//
+//  TaleneParallaxForCode.swift
+//  Talene
+//
+//  Created by Frank Thamel on 1/29/17.
+//  Copyright © 2017 Talene. All rights reserved.
+//
+
+import Foundation
+import SpriteKit
+
+class TaleneParallaxForCode : SKScene{
+    
+    /*
+     * These methods should be override in order to add parallax effect to the game scene.
+     *
+     override func didMove(to view: SKView) {
+     super.didMove(to: view)
+     }
+     
+     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+     super.touchesBegan(touches, with: event)
+     
+     }
+     
+     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+     super.touchesMoved(touches, with: event)
+     }
+     
+     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+     super.touchesEnded(touches, with: event)
+     }
+     
+     override func update(_ currentTime: TimeInterval) {
+     super.update(currentTime)
+     }
+     
+     * Layer 1 is must
+     * Layer 1 should contains the icons
+     * Should set icon layer count
+     * numberOfActiveFrames = 3
+     
+     * quick scroll buttons
+     * quickScrollToPageOneButton / quickScrollToPageTwoButton / quickScrollToPageThreeButton / quickScrollToPageFourButton
+     * Frame Face Not Selected_SC_1 / Frame Face Not Selected_SC_2 / Frame Face Not Selected_SC_3 / Frame Face Not Selected_SC_4
+     */
+    
+    // Talene Parallax layers
+    var layer1 : SKNode!
+    var layer2 : SKNode!
+    var layer3 : SKNode!
+    var layer4 : SKNode!
+    var layer5 : SKNode!
+    var layer6 : SKNode!
+    var layer7 : SKNode!
+    var layerStatic: SKNode!
+    
+    //quick scroll buttons
+    var quickScrollToPageOneButton : SKSpriteNode?
+    var quickScrollToPageTwoButton : SKSpriteNode?
+    var quickScrollToPageThreeButton : SKSpriteNode?
+    var quickScrollToPageFourButton : SKSpriteNode?
+    
+    
+    //touch begin point
+    var startPoint = CGPoint.zero
+    
+    //touch end point
+    var lastPoint  = CGPoint.zero
+    
+    //touch start time
+    var startTime: TimeInterval = 0
+    
+    //touch end time
+    var endTime: TimeInterval = 0
+    
+    //update time interval
+    var dt : TimeInterval = 0
+    
+    //point before touch end
+    var beforeLastPoint = CGPoint.zero
+    
+    //set number of active frames
+    var numberOfActiveFrames : CGFloat = 0 {
+        didSet {
+            n = numberOfActiveFrames
+        }
+    }
+    
+    //icon layer frame count
+    var n : CGFloat = 0 {
+        didSet {
+            layer1Min = 0.5 * ( n * x * -1 ) / 0.8
+            layer1Max = 0.5 *  x  / 0.8
+            
+            layer2Min = 0.6 * ( n * x * -1 ) / 0.8
+            layer2Max = 0.6 *  x  / 0.8
+            
+            layer3Min = 0.7 * ( n * x * -1 ) / 0.8
+            layer3Max = 0.7 *  x  / 0.8
+            
+            layer4Min = n * x * -1
+            layer4Max =  x
+            
+            layer5Min = 0.9 * ( n * x * -1 ) / 0.8
+            layer5Max = 0.9 * x  / 0.8
+            
+            layer6Min =  ( n * x * -1 ) / 0.8
+            layer6Max =   x  / 0.8
+            
+            layer7Min = 1.1 * ( n * x * -1 ) / 0.8
+            layer7Max = 1.1 *  x  / 0.8
+            
+        }
+    }
+    
+    //frame width
+    var x : CGFloat = 0
+    
+    //isFinger on scren
+    var isFingerOnScreen = false
+    
+    
+    // layers min and max
+    var layer1Min : CGFloat = 0
+    var layer1Max : CGFloat = 0
+    
+    var layer2Min : CGFloat = 0
+    var layer2Max : CGFloat = 0
+    
+    var layer3Min : CGFloat = 0
+    var layer3Max : CGFloat = 0
+    
+    var layer4Min : CGFloat = 0
+    var layer4Max : CGFloat = 0
+    
+    var layer5Min : CGFloat = 0
+    var layer5Max : CGFloat = 0
+    
+    var layer6Min : CGFloat = 0
+    var layer6Max : CGFloat = 0
+    
+    var layer7Min : CGFloat = 0
+    var layer7Max : CGFloat = 0
+    
+    // set quick scroll button image
+    var quickScrollBtnSelected = "Frame Face"
+    var quickScrollBtnNotSelected = "Frame Face Not Selected"
+    
+    var quickScrollBtn1Selected_t : SKTexture!
+    var quickScrollBtn2Selected_t : SKTexture!
+    var quickScrollBtn3Selected_t : SKTexture!
+    var quickScrollBtn4Selected_t : SKTexture!
+    var quickScrollBtn1NotSelected_t : SKTexture!
+    var quickScrollBtn2NotSelected_t : SKTexture!
+    var quickScrollBtn3NotSelected_t : SKTexture!
+    var quickScrollBtn4NotSelected_t : SKTexture!
+    
+    // set scene code for image identifiers
+    var sceneCode : String? {
+        didSet {
+            quickScrollBtnSelected += "_" + sceneCode! + "_"
+            quickScrollBtnNotSelected += "_" + sceneCode! + "_"
+            
+            quickScrollBtn1Selected_t = SKTexture(imageNamed: "\(quickScrollBtnSelected)1")
+            quickScrollBtn2Selected_t = SKTexture(imageNamed: "\(quickScrollBtnSelected)2")
+            quickScrollBtn3Selected_t = SKTexture(imageNamed: "\(quickScrollBtnSelected)3")
+            quickScrollBtn4Selected_t = SKTexture(imageNamed: "\(quickScrollBtnSelected)4")
+            quickScrollBtn1NotSelected_t = SKTexture(imageNamed: "\(quickScrollBtnNotSelected)1")
+            quickScrollBtn2NotSelected_t = SKTexture(imageNamed: "\(quickScrollBtnNotSelected)2")
+            quickScrollBtn3NotSelected_t = SKTexture(imageNamed: "\(quickScrollBtnNotSelected)3")
+            quickScrollBtn4NotSelected_t = SKTexture(imageNamed: "\(quickScrollBtnNotSelected)4")
+        }
+    }
+    
+    // frame moveing time in quick scroll
+    var quickScrollTime : TimeInterval!
+
+    // remove unwanted nodes
+    // arrays to hold nodes x positions
+    var nodesXPositionLayer1 : [CGFloat]?
+    var nodesXPositionLayer2 : [CGFloat]?
+    var nodesXPositionLayer3 : [CGFloat]?
+    var nodesXPositionLayer4 : [CGFloat]?
+    var nodesXPositionLayer5 : [CGFloat]?
+    var nodesXPositionLayer6 : [CGFloat]?
+    var nodesXPositionLayer7 : [CGFloat]?
+    
+    // dictionaries to hold nodes
+    var layer1Nodes : [Int : SKSpriteNode]?
+    var layer2Nodes : [Int : SKSpriteNode]?
+    var layer3Nodes : [Int : SKSpriteNode]?
+    var layer4Nodes : [Int : SKSpriteNode]?
+    var layer5Nodes : [Int : SKSpriteNode]?
+    var layer6Nodes : [Int : SKSpriteNode]?
+    var layer7Nodes : [Int : SKSpriteNode]?
+    
+    // arrays to hold active nodes
+    var activeNodesLayer1 : [Int]?
+    var activeNodesLayer2 : [Int]?
+    var activeNodesLayer3 : [Int]?
+    var activeNodesLayer4 : [Int]?
+    var activeNodesLayer5 : [Int]?
+    var activeNodesLayer6 : [Int]?
+    var activeNodesLayer7 : [Int]?
+    
+    
+    override func didMove(to view: SKView) {
+        
+        let pointZero = CGPoint(x: 0, y: 0)
+        
+        // set layers
+        layer1 = SKNode()
+        layer1.position = pointZero
+        layer1.zPosition = 10
+        addChild(layer1)
+        
+        layer2 = SKNode()
+        layer2.position = pointZero
+        layer2.zPosition = 20
+        addChild(layer2)
+        
+        layer3 = SKNode()
+        layer3.position = pointZero
+        layer3.zPosition = 30
+        addChild(layer3)
+        
+        layer4 = SKNode()
+        layer4.position = pointZero
+        layer4.zPosition = 40
+        addChild(layer4)
+        
+        layer5 = SKNode()
+        layer5.position = pointZero
+        layer5.zPosition = 50
+        addChild(layer5)
+        
+        layer6 = SKNode()
+        layer6.position = pointZero
+        layer6.zPosition = 60
+        addChild(layer6)
+        
+        layer7 = SKNode()
+        layer7.position = pointZero
+        layer7.zPosition = 70
+        addChild(layer7)
+        
+        layerStatic =  SKNode()
+        layerStatic.position = pointZero
+        layerStatic.zPosition = 100
+        addChild(layerStatic)
+        
+        /*
+         // fill nodes to dictinaries and arrays
+         if let l7 =  layer7 {
+         nodesXPositionLayer7 = []
+         layer7Nodes = [:]
+         activeNodesLayer7 = []
+         storeSKSpriteNodes(forLayer: l7)
+         }
+         nodesBoundsCheck()
+         print("Number of SKSprite nodes in layer 7 : \(nodesXPositionLayer7?.count)")
+         */
+        
+        if let quickScrollToPageOneButton = quickScrollToPageOneButton {
+            print(quickScrollToPageOneButton.name ?? "NO NAME FOR BUTTON ONE")
+        }
+        
+        self.view?.isMultipleTouchEnabled = false
+        
+        x = 2048
+        print("Frame width : \(x)")
+        
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        isFingerOnScreen = true
+        guard let touch = touches.first else {
+            return
+        }
+        startPoint = touch.location(in: self)
+        lastPoint = startPoint
+        //remove move actions
+        layer1?.removeAction(forKey: "move_background_layer1")
+        layer2?.removeAction(forKey: "move_background_layer2")
+        layer3?.removeAction(forKey: "move_background_layer3")
+        layer4?.removeAction(forKey: "move_background_layer4")
+        layer5?.removeAction(forKey: "move_background_layer5")
+        layer6?.removeAction(forKey: "move_background_layer6")
+        layer7?.removeAction(forKey: "move_background_layer7")
+        
+        //set start time
+        startTime = dt
+        
+        // remove auto scroll action
+        layer1?.removeAction(forKey: "layer1Move")
+        layer2?.removeAction(forKey: "layer2Move")
+        layer3?.removeAction(forKey: "layer3Move")
+        layer4?.removeAction(forKey: "layer4Move")
+        layer5?.removeAction(forKey: "layer5Move")
+        layer6?.removeAction(forKey: "layer6Move")
+        layer7?.removeAction(forKey: "layer7Move")
+        
+        // if quick scroll button tapped
+        quickScrollAction(buttonLocation: startPoint)
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        isFingerOnScreen = true
+        
+        //get layer 4 x position
+        let layer1X = layer1?.position.x
+        
+        //true = right
+        let direction : Bool = (lastPoint.x - beforeLastPoint.x) > 0 ? true : false
+        
+        guard let touch = touches.first else {
+            return
+        }
+        let touchPoint  = touch.location(in: self)
+        
+        if (layer1Min < layer1X! ) && ( layer1X! < layer1Max ) {
+            moveLayersOnTouch(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7, distance: (touchPoint.x - lastPoint.x ), multiplier: 0.5)
+        } else if layer1X! == layer1Min && direction {
+            moveLayersOnTouch(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7, distance: (touchPoint.x - lastPoint.x ), multiplier: 0.5)
+        } else if layer1X! == layer1Max && !direction{
+            moveLayersOnTouch(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7, distance: (touchPoint.x - lastPoint.x ), multiplier: 0.5)
+        }
+        
+        beforeLastPoint = lastPoint
+        lastPoint = touchPoint
+        checkBounds()
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        isFingerOnScreen = false
+        //set end time
+        endTime = dt
+        let timeDifference = abs(startTime - endTime)
+        
+        //true = right
+        let direction : Bool = (lastPoint.x - beforeLastPoint.x) > 0 ? true : false
+        
+        //touch move distance
+        let touchMoveDistance = abs(lastPoint.x - startPoint.x)
+        
+        //get layer 4 x position
+        let layer1X = layer1?.position.x
+        
+        if touchMoveDistance > 120 && timeDifference < 0.8 && (layer1Min < layer1X!) && (layer1Max > layer1X!){
+            let moveRightActionLayer1 = SKAction.moveBy(x: 2000*0.5, y: 0, duration: 2)
+            let moveLeftActionLayer1 = SKAction.moveBy(x: -2000*0.5, y: 0, duration: 2)
+            moveRightActionLayer1.timingMode = .easeOut
+            moveLeftActionLayer1.timingMode = .easeOut
+            layer1?.run(direction ? moveRightActionLayer1 : moveLeftActionLayer1 , withKey: "move_background_layer1")
+            
+            let moveRightActionLayer2 = SKAction.moveBy(x: 2000*0.6, y: 0, duration: 2)
+            let moveLeftActionLayer2 = SKAction.moveBy(x: -2000*0.6, y: 0, duration: 2)
+            moveRightActionLayer2.timingMode = .easeOut
+            moveLeftActionLayer2.timingMode = .easeOut
+            layer2?.run(direction ? moveRightActionLayer2 : moveLeftActionLayer2 , withKey: "move_background_layer2")
+            
+            let moveRightActionLayer3 = SKAction.moveBy(x: 2000*0.7, y: 0, duration: 2)
+            let moveLeftActionLayer3 = SKAction.moveBy(x: -2000*0.7, y: 0, duration: 2)
+            moveRightActionLayer3.timingMode = .easeOut
+            moveLeftActionLayer3.timingMode = .easeOut
+            layer3?.run(direction ? moveRightActionLayer3 : moveLeftActionLayer3 , withKey: "move_background_layer3")
+            
+            let moveRightActionLayer4 = SKAction.moveBy(x: 2000*0.8, y: 0, duration: 2)
+            let moveLeftActionLayer4 = SKAction.moveBy(x: -2000*0.8, y: 0, duration: 2)
+            moveRightActionLayer4.timingMode = .easeOut
+            moveLeftActionLayer4.timingMode = .easeOut
+            layer4?.run(direction ? moveRightActionLayer4 : moveLeftActionLayer4 , withKey: "move_background_layer4")
+            
+            let moveRightActionLayer5 = SKAction.moveBy(x: 2000*0.9, y: 0, duration: 2)
+            let moveLeftActionLayer5 = SKAction.moveBy(x: -2000*0.9, y: 0, duration: 2)
+            moveRightActionLayer5.timingMode = .easeOut
+            moveLeftActionLayer5.timingMode = .easeOut
+            layer5?.run(direction ? moveRightActionLayer5 : moveLeftActionLayer5 , withKey: "move_background_layer5")
+            
+            let moveRightActionLayer6 = SKAction.moveBy(x: 2000, y: 0, duration: 2)
+            let moveLeftActionLayer6 = SKAction.moveBy(x: -2000, y: 0, duration: 2)
+            moveRightActionLayer6.timingMode = .easeOut
+            moveLeftActionLayer6.timingMode = .easeOut
+            layer6?.run(direction ? moveRightActionLayer6 : moveLeftActionLayer6 , withKey: "move_background_layer6")
+            
+            let moveRightActionLayer7 = SKAction.moveBy(x: 2000*1.1, y: 0, duration: 2)
+            let moveLeftActionLayer7 = SKAction.moveBy(x: -2000*1.1, y: 0, duration: 2)
+            moveRightActionLayer7.timingMode = .easeOut
+            moveLeftActionLayer7.timingMode = .easeOut
+            layer7?.run(direction ? moveRightActionLayer7 : moveLeftActionLayer7 , withKey: "move_background_layer7")
+            
+            
+        } else {
+            layer1?.removeAction(forKey: "move_background_layer1")
+            layer2?.removeAction(forKey: "move_background_layer2")
+            layer3?.removeAction(forKey: "move_background_layer3")
+            layer4?.removeAction(forKey: "move_background_layer4")
+            layer5?.removeAction(forKey: "move_background_layer5")
+            layer6?.removeAction(forKey: "move_background_layer6")
+            layer7?.removeAction(forKey: "move_background_layer7")
+        }
+        
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        dt = currentTime
+        if !isFingerOnScreen{
+            checkBoundsFreely()
+        }
+        setTextureToFrameButtonsInUpdateTime()
+        //nodesBoundsCheck()
+    }
+    
+    // check bounds when finger is not on screen
+    func checkBoundsFreely() {
+        if let l1 = layer1 {
+            if l1.position.x < layer1Min {
+                
+                layer1?.position.x = layer1Min
+                
+                moveToMinInAction(layer: layer2, layerMinPoint: layer2Min , in : 0.1)
+                moveToMinInAction(layer: layer3, layerMinPoint: layer3Min , in : 0.2)
+                moveToMinInAction(layer: layer4, layerMinPoint: layer4Min , in : 0.3)
+                moveToMinInAction(layer: layer5, layerMinPoint: layer5Min , in : 0.4)
+                moveToMinInAction(layer: layer6, layerMinPoint: layer6Min , in : 0.5)
+                moveToMinInAction(layer: layer7, layerMinPoint: layer7Min , in : 0.6)
+                
+                addMoveRight(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7)
+            }
+            if l1.position.x > layer1Max {
+                
+                layer1?.position.x = layer1Max
+                
+                moveToMaxInAction(layer: layer2, layerMaxPoint: layer2Max , in : 0.1)
+                moveToMaxInAction(layer: layer3, layerMaxPoint: layer3Max , in : 0.2)
+                moveToMaxInAction(layer: layer4, layerMaxPoint: layer4Max , in : 0.3)
+                moveToMaxInAction(layer: layer5, layerMaxPoint: layer5Max , in : 0.4)
+                moveToMaxInAction(layer: layer6, layerMaxPoint: layer6Max , in : 0.5)
+                moveToMaxInAction(layer: layer7, layerMaxPoint: layer7Max , in : 0.6)
+                
+                addMoveLeft(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7)
+            }
+        }
+        
+    }
+    
+    // slowdown when layer1 reaches to bounds
+    func moveToMinInAction(layer : SKNode? , layerMinPoint : CGFloat , in time : TimeInterval) {
+        let layerMin = CGPoint(x: layerMinPoint, y: 0)
+        let moveToMinAction = SKAction.move(to: layerMin, duration: time)
+        layer?.run(moveToMinAction)
+    }
+    
+    // slowdown when layer1 reaches to bounds
+    func moveToMaxInAction(layer : SKNode? , layerMaxPoint : CGFloat , in time : TimeInterval) {
+        let layerMax = CGPoint(x: layerMaxPoint, y: 0)
+        let moveToMaxAction = SKAction.move(to: layerMax, duration: time)
+        layer?.run(moveToMaxAction)
+    }
+    
+    // check bounds when scrolling
+    func checkBounds() {
+        
+        if let l1 = layer1 {
+            if l1.position.x < layer1Min {
+                layer1?.position.x = layer1Min
+                layer2?.position.x = layer2Min
+                layer3?.position.x = layer3Min
+                layer4?.position.x = layer4Min
+                layer5?.position.x = layer5Min
+                layer6?.position.x = layer6Min
+                layer7?.position.x = layer7Min
+                
+                removeMoveRight(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7)
+            }
+            if l1.position.x > layer1Max {
+                layer1?.position.x = layer1Max
+                layer2?.position.x = layer2Max
+                layer3?.position.x = layer3Max
+                layer4?.position.x = layer4Max
+                layer5?.position.x = layer5Max
+                layer6?.position.x = layer6Max
+                layer7?.position.x = layer7Max
+                
+                removeMoveLeft(layers: layer1,layer2,layer3,layer4,layer5,layer6,layer7)
+            }
+        }
+        
+    }
+    
+    // check bounds and add bounce effect to right
+    func addMoveRight(layers : SKNode?...) {
+        var multiplier : CGFloat = 0.5
+        for(index , layer) in layers.enumerated() {
+            layer?.removeAction(forKey: "move_background_layer\(index+1)")
+            let move = SKAction.moveBy(x: CGFloat(150) * multiplier, y: 0, duration: 2)
+            move.timingMode = .easeOut
+            layer?.run(move, withKey: "move_r")
+            multiplier += 0.2
+        }
+    }
+    
+    // check bounds and add bounce effect to laft
+    func addMoveLeft(layers : SKNode?...) {
+        var multiplier : CGFloat = 0.5
+        for(index , layer) in layers.enumerated() {
+            layer?.removeAction(forKey: "move_background_layer\(index+1)")
+            let move = SKAction.moveBy(x: CGFloat(-150) * multiplier, y: 0, duration: 2)
+            move.timingMode = .easeOut
+            layer?.run(move, withKey: "move_l")
+            multiplier += 0.2
+        }
+    }
+    
+    // check bounds and add remove layer actions
+    func removeMoveRight(layers : SKNode?...) {
+        for(index , layer) in layers.enumerated() {
+            layer?.removeAction(forKey: "move_background_layer\(index+1)")
+            layer?.removeAction(forKey: "move_r")
+        }
+    }
+    
+    // check bounds and add remove layer actions
+    func removeMoveLeft(layers : SKNode?...) {
+        for(index , layer) in layers.enumerated() {
+            layer?.removeAction(forKey: "move_background_layer\(index+1)")
+            layer?.removeAction(forKey: "move_l")
+        }
+    }
+    
+    // move layers when scrolling
+    func moveLayersOnTouch(layers : SKNode... , distance : CGFloat , multiplier : CGFloat) {
+        var minMultiplier = multiplier
+        for layer in layers {
+            layer.position.x += ( distance * minMultiplier)
+            minMultiplier += 0.1
+        }
+    }
+    
+    // quick scroll button tap
+    func quickScrollAction(buttonLocation : CGPoint) {
+        if let button1 = quickScrollToPageOneButton {
+            if button1.contains(buttonLocation) {
+                print("Move to frame 1")
+                quickScroll(toFrame: 1)
+            }
+        }
+        
+        if let button2 = quickScrollToPageTwoButton {
+            if button2.contains(buttonLocation) {
+                print("Move to frame 2")
+                quickScroll(toFrame: 2)
+            }
+        }
+        
+        if let button3 = quickScrollToPageThreeButton {
+            if button3.contains(buttonLocation) {
+                print("Move to frame 3")
+                quickScroll(toFrame: 3)
+            }
+        }
+        
+        if let button4 = quickScrollToPageFourButton {
+            if button4.contains(buttonLocation) {
+                print("Move to frame 4")
+                quickScroll(toFrame: 4)
+            }
+        }
+    }
+    
+    func setTextureToFrameButtonsInUpdateTime() {
+        guard let  layer4CenterPositionX = layer4?.position.x else {
+            return
+        }
+        
+        if ( -7168.0 < layer4CenterPositionX ) && ( layer4CenterPositionX < -5120.0 ) {
+            if quickScrollToPageFourButton?.texture != quickScrollBtn4Selected_t {
+                quickScrollToPageOneButton?.texture = quickScrollBtn1NotSelected_t
+                quickScrollToPageTwoButton?.texture = quickScrollBtn2NotSelected_t
+                quickScrollToPageThreeButton?.texture = quickScrollBtn3NotSelected_t
+                quickScrollToPageFourButton?.texture = quickScrollBtn4Selected_t
+            }
+        } else if ( -5120.0 < layer4CenterPositionX ) && ( layer4CenterPositionX < -3072.0 ) {
+            if quickScrollToPageThreeButton?.texture != quickScrollBtn3Selected_t {
+                quickScrollToPageOneButton?.texture = quickScrollBtn1NotSelected_t
+                quickScrollToPageTwoButton?.texture = quickScrollBtn2NotSelected_t
+                quickScrollToPageThreeButton?.texture = quickScrollBtn3Selected_t
+                quickScrollToPageFourButton?.texture = quickScrollBtn4NotSelected_t
+            }
+        } else if ( -3072.0 < layer4CenterPositionX ) && ( layer4CenterPositionX < -1024.0 ) {
+            if quickScrollToPageTwoButton?.texture != quickScrollBtn2Selected_t {
+                quickScrollToPageOneButton?.texture = quickScrollBtn1NotSelected_t
+                quickScrollToPageTwoButton?.texture = quickScrollBtn2Selected_t
+                quickScrollToPageThreeButton?.texture = quickScrollBtn3NotSelected_t
+                quickScrollToPageFourButton?.texture = quickScrollBtn4NotSelected_t
+            }
+        } else if ( -1024.0 < layer4CenterPositionX ) && ( layer4CenterPositionX < 1024.0 ) {
+            if quickScrollToPageOneButton?.texture != quickScrollBtn1Selected_t {
+                quickScrollToPageOneButton?.texture = quickScrollBtn1Selected_t
+                quickScrollToPageTwoButton?.texture = quickScrollBtn2NotSelected_t
+                quickScrollToPageThreeButton?.texture = quickScrollBtn3NotSelected_t
+                quickScrollToPageFourButton?.texture = quickScrollBtn4NotSelected_t
+            }
+        }
+    }
+    
+    // quick scroll to selected frame
+    func quickScroll(toFrame : Int)  {
+        var pointX : CGFloat = 0
+        
+        switch toFrame {
+        case 2:
+            pointX = -2048
+        case 3:
+            pointX = -4096
+        case 4:
+            pointX = -6144
+        default:
+            print("Not a valid frame")
+        }
+        
+        let layer1MoveAction = SKAction.move(to: CGPoint(x: pointX * 0.5 / 0.8, y: 0.0 ), duration: quickScrollTime)
+        layer1MoveAction.timingMode = .easeOut
+        
+        let layer2MoveAction = SKAction.move(to: CGPoint(x: pointX * 0.6 / 0.8, y: 0.0 ), duration: quickScrollTime)
+        layer2MoveAction.timingMode = .easeOut
+        
+        let layer3MoveAction = SKAction.move(to: CGPoint(x: pointX * 0.7 / 0.8, y: 0.0 ), duration: quickScrollTime)
+        layer3MoveAction.timingMode = .easeOut
+        
+        let layer4MoveAction = SKAction.move(to: CGPoint(x: pointX , y: 0.0 ), duration: quickScrollTime)
+        layer4MoveAction.timingMode = .easeOut
+        
+        let layer5MoveAction = SKAction.move(to: CGPoint(x: pointX * 0.9 / 0.8, y: 0.0 ), duration: quickScrollTime)
+        layer5MoveAction.timingMode = .easeOut
+        
+        let layer6MoveAction = SKAction.move(to: CGPoint(x: pointX * 1.0 / 0.8, y: 0.0 ), duration: quickScrollTime)
+        layer6MoveAction.timingMode = .easeOut
+        
+        let layer7MoveAction = SKAction.move(to: CGPoint(x: pointX * 1.1 / 0.8, y: 0.0 ), duration: quickScrollTime)
+        layer7MoveAction.timingMode = .easeOut
+        
+        layer1?.run(layer1MoveAction, withKey: "layer1Move")
+        layer2?.run(layer2MoveAction, withKey: "layer2Move")
+        layer3?.run(layer3MoveAction, withKey: "layer3Move")
+        layer4?.run(layer4MoveAction, withKey: "layer4Move")
+        layer5?.run(layer5MoveAction, withKey: "layer5Move")
+        layer6?.run(layer6MoveAction, withKey: "layer6Move")
+        layer7?.run(layer7MoveAction, withKey: "layer7Move")
+        
+    }
+    
+    // wiggle spritenodes
+    func addRotateAction(sprite : SKSpriteNode? , index : Int) {
+        sprite?.zRotation = 0
+        let rotateLeft = SKAction.rotate(byAngle: -0.4, duration: 0.35)
+        let rotateRight = SKAction.rotate(byAngle: 0.8, duration: 0.7)
+        sprite?.run(SKAction.repeatForever(SKAction.sequence([rotateLeft , rotateRight , rotateLeft])), withKey: "endlessRotate\(index)")
+    }
+    
+    // add quick scroll buttons
+    func addQuickScrollButtons(forPages pages : Int...) {
+        for page in pages {
+            switch page {
+            case 1:
+                quickScrollToPageOneButton = SKSpriteNode(imageNamed: "\(quickScrollBtnSelected)1")
+                quickScrollToPageOneButton!.zPosition = 100
+                quickScrollToPageOneButton!.position = CGPoint(x: -880, y: -690)
+                layerStatic.addChild(quickScrollToPageOneButton!)
+                addRotateAction(sprite: quickScrollToPageOneButton, index: 1)
+                
+            case 2:
+                quickScrollToPageTwoButton = SKSpriteNode(imageNamed: "\(quickScrollBtnNotSelected)2")
+                quickScrollToPageTwoButton!.zPosition = 90
+                quickScrollToPageTwoButton!.position = CGPoint(x: -780, y: -690)
+                quickScrollToPageTwoButton!.texture = SKTexture(imageNamed: "\(quickScrollBtnNotSelected)2")
+                layerStatic.addChild(quickScrollToPageTwoButton!)
+                addRotateAction(sprite: quickScrollToPageTwoButton, index: 2)
+                
+            case 3:
+                quickScrollToPageThreeButton = SKSpriteNode(imageNamed: "\(quickScrollBtnNotSelected)3")
+                quickScrollToPageThreeButton!.zPosition = 90
+                quickScrollToPageThreeButton!.position = CGPoint(x: -680, y: -690)
+                layerStatic.addChild(quickScrollToPageThreeButton!)
+                addRotateAction(sprite: quickScrollToPageThreeButton, index: 3)
+                
+            case 4:
+                quickScrollToPageFourButton = SKSpriteNode(imageNamed: "\(quickScrollBtnNotSelected)4")
+                quickScrollToPageFourButton!.zPosition = 90
+                quickScrollToPageFourButton!.position = CGPoint(x: -580, y: -690)
+                layerStatic.addChild(quickScrollToPageFourButton!)
+                addRotateAction(sprite: quickScrollToPageFourButton, index: 4)
+                
+            default:
+                print("not valid count for quick scroll buttons.")
+            }
+        }
+    }
+    
+    func addNodes(_ nodes : SKSpriteNode... , forLayer layer : SKNode , from start : CGPoint , withTextureWidth assetWidth : CGFloat , withOffset offset : CGFloat , withZPosition z : CGFloat , repeatable : Bool) {
+        let assetWidth = assetWidth
+        if repeatable {
+            for (index , node ) in nodes.enumerated() {
+                if (index % 2 ) == 0 {
+                    node.zPosition = z
+                    node.position =  CGPoint(x: (start.x + (assetWidth * CGFloat(index) - offset * CGFloat(index) )), y: start.y)
+                    addNode(node, toLayer: layer)
+                } else {
+                    node.zPosition = z
+                    node.xScale = -1
+                    node.position =  CGPoint(x: (start.x + (assetWidth * CGFloat(index) - offset * CGFloat(index) )), y: start.y)
+                    addNode(node, toLayer: layer)
+                }
+            }
+        } else {
+            for (index , node ) in nodes.enumerated() {
+                node.zPosition = z
+                node.position =  CGPoint(x: (start.x + (assetWidth * CGFloat(index) - offset * CGFloat(index) )), y: start.y)
+                addNode(node, toLayer: layer)
+            }
+        }
+    }
+    
+    func addNode(_ node : SKSpriteNode , ZPositioin z : CGFloat , XPosition x : CGFloat, YPosition y : CGFloat , forLayer layer : SKNode, scale : CGFloat) {
+        let position = CGPoint(x: x, y: y)
+        node.zPosition = z
+        node.setScale(scale)
+        node.position = position
+        addNode(node, toLayer: layer)
+    }
+    
+    func addNode(_ node : SKSpriteNode , ZPositioin z : CGFloat , XPosition x : CGFloat, YPosition y : CGFloat , forLayer layer : SKNode, Xscale : CGFloat , YScale : CGFloat) {
+        node.xScale = Xscale
+        node.yScale = YScale
+        let position = CGPoint(x: x, y: y)
+        node.zPosition = z
+        node.position = position
+        addNode(node, toLayer: layer)
+    }
+    
+    func addReferenceNode(_ node : SKReferenceNode , ZPositioin z : CGFloat , XPosition x : CGFloat, YPosition y : CGFloat , forLayer layer : SKNode, scale : CGFloat) {
+        let position = CGPoint(x: x, y: y)
+        node.zPosition = z
+        node.setScale(scale)
+        node.position = position
+        layer.addChild(node)
+    }
+    
+    func addNode(_ node : SKSpriteNode , ZPositioin z : CGFloat , XPosition x : CGFloat, YPosition y : CGFloat , forLayer layer : SKNode, scale : CGFloat, withRotation rotation : CGFloat) {
+        node.zRotation = ( -rotation * .pi ) / 180
+        addNode(node, ZPositioin: z, XPosition: x, YPosition: y, forLayer: layer, scale: scale)
+    }
+    
+    func addNode(_ node : SKSpriteNode , ZPositioin z : CGFloat , BottomXPosition x : CGFloat, BottomYPosition y : CGFloat , forLayer layer : SKNode, scale : CGFloat) {
+        node.anchorPoint = CGPoint(x: 0.5, y: 0)
+        addNode(node, ZPositioin: z, XPosition: x, YPosition: y, forLayer: layer, scale: scale)
+    }
+    
+    func addNode(_ node : SKSpriteNode, toLayer layer : SKNode) {
+        // layer.addChild(node)
+        
+        // load 
+    }
+    
+    
+    /*
+     // add nodes and x positons to arrays
+     func storeSKSpriteNodes(forLayer layer : SKNode) {
+     var counter = 0
+     layer.enumerateChildNodes(withName: "//*", using: {
+     node , _ in
+     if node is SKSpriteNode {
+     self.nodesXPositionLayer7!.insert(node.position.x, at: counter)
+     self.layer7Nodes![counter] = node as? SKSpriteNode
+     
+     counter += 1
+     }
+     })
+     }
+     
+     // check whether the nodes in active area
+     func nodesBoundsCheck() {
+     if let l7 = layer7 {
+     checkNodeBounds(forLayer: l7)
+     }
+     }
+     
+     func checkNodeBounds(forLayer layer : SKNode)  {
+     
+     var centerToLayerCenterDistance : CGFloat = layer.position.x
+     var lowerBound : CGFloat = 0
+     var upperBound : CGFloat = 0
+     
+     if !((centerToLayerCenterDistance > -2048) && (centerToLayerCenterDistance < 2048)) {
+     if centerToLayerCenterDistance > 2048 {
+     centerToLayerCenterDistance = centerToLayerCenterDistance * -1
+     lowerBound = centerToLayerCenterDistance - 2048
+     upperBound = centerToLayerCenterDistance + 2048
+     } else if centerToLayerCenterDistance < -2048 {
+     lowerBound = centerToLayerCenterDistance - 2048
+     upperBound = centerToLayerCenterDistance + 2048
+     }
+     validateNodes(forLayer: 7, lowerBounds: lowerBound, upperBounds: upperBound)
+     }
+     }
+     
+     func validateNodes(forLayer layer : Int , lowerBounds lb : CGFloat , upperBounds ub : CGFloat) {
+     if layer == 7 {
+     for (index , nodeX) in nodesXPositionLayer7!.enumerated() {
+     if nodeX > lb && nodeX < ub {
+     if !activeNodesLayer7!.contains(index) {
+     layer7!.addChild((layer7Nodes?[index])!)
+     activeNodesLayer7?.append(index)
+     }
+     } else {
+     if activeNodesLayer7!.contains(index) {
+     layer7!.removeChildren(in: [(layer7Nodes?[index])!])
+     let removeIndex = activeNodesLayer7!.index(of: index)
+     if let remove = removeIndex {
+     activeNodesLayer7!.remove(at: remove)
+     }
+     }
+     }
+     }
+     }
+     }
+     */
+     
+     
+     }
+     */
+}
+
+
+
+
+
+

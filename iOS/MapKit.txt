@@ -1,0 +1,73 @@
+1. Geocoder
+
+    forward geocoding : address -> coordinate 
+    reverse geocoding : coordinate -> address
+    
+2. Add annotation to a map
+
+    func addAnnotation() {
+        let geoCoder = CLGeocoder()
+        geoCoder.geocodeAddressString(currentRestaurant!.location , completionHandler: {
+            placemarks , error in
+            
+            if error != nil {
+                print(error)
+                return
+            }
+            
+            if let placemarks = placemarks {
+                //get the first placemark
+                let placemark = placemarks[0]
+                
+                //Add annotations
+                let annotation = MKPointAnnotation()
+                
+                if let location = placemark.location {
+                    //Display the annotation 
+                    annotation.coordinate = location.coordinate
+                    self.mapView.addAnnotation(annotation)
+                    
+                    //set the zoom level
+                    let region = MKCoordinateRegionMakeWithDistance(annotation.coordinate, 250, 250)
+                    self.mapView.setRegion(region, animated: true)
+                }
+            }
+        
+        })
+    }
+    
+3. Add more details to annotation
+
+    func addAnnotation() {
+        let geoCoder = CLGeocoder()
+        geoCoder.geocodeAddressString(restaurant!.location , completionHandler: {
+            placemarks , error in
+            
+            if error != nil {
+                print(error)
+                return
+            }
+            
+            if let placemarks = placemarks {
+                //get the first placemark
+                let placemark = placemarks[0]
+                
+                //Add annotations
+                let annotation = MKPointAnnotation()
+                annotation.title = self.restaurant.name
+                annotation.subtitle = self.restaurant.type
+                
+                if let location = placemark.location {
+                    //Display the annotation
+                    annotation.coordinate = location.coordinate
+                    
+                    self.mapView.showAnnotations([annotation], animated: true)
+                    self.mapView.selectAnnotation(annotation, animated: true)
+                }
+                
+            }
+            
+        })
+    }
+
+4.

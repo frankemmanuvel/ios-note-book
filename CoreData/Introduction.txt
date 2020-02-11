@@ -1,0 +1,276 @@
+1. Basic words
+
+    - persistant Container
+    
+    - managed object model
+        represent the way Core Data represent data on Disk.
+        
+    - entity
+    - attribute
+    - relationship
+    
+    
+    Level 1
+    =======
+    
+    1. Create an entity in the xcdatamodeId
+    2. Create a new attribute and set its data type.
+    3. Create an array to hold entity data
+    
+        var people : [NSManagedObject] = []
+        
+    4. get values from array 
+    
+        let person = people[indexPath.row]
+        cell.textLabel?.text = person.value(forKey: "name") as? String
+        
+    5. Save String values
+    
+        * import CoreData
+    
+        func save(name : String) {
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                return
+            }
+
+            //1
+            let managedContext = appDelegate.persistentContainer.viewContext
+
+            //2
+            let entity = NSEntityDescription.entity(forEntityName: "Person", in: managedContext)!
+
+            let person = NSManagedObject(entity: entity, insertInto: managedContext)
+
+            //3
+            person.setValue(name, forKey: "name")
+
+            //4
+            do {
+                try managedContext.save()
+                people.append(person)
+            } catch let error as NSError {
+                print("Could not save. \(error), \(error.userInfo)")
+            }
+        }
+        
+    6. Fetch data 
+    
+        * import CoreData
+    
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+
+            //1
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                return
+            }
+
+            let managedContext = appDelegate.persistentContainer.viewContext
+
+            //2
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName : "Person")
+
+            //3
+            do {
+              people = try managedContext.fetch(fetchRequest)
+            } catch let error as NSError {
+                print("Could Not fetch. \(error), \(error.userInfo)")
+            }
+        }
+
+
+Level 2
+=======
+
+1. To save images create the model type as binary data and check allow external storage.
+2. To save a UIColor or any data type which inherits from "NSCoding" can be added as a Transformable.
+3. set codegen mode.
+4. comple.
+5. select the entity -> go to editor -> crete entity sub class
+6. select the current group
+
+Sample Code to test persistance
+-------------------------------
+
+    //save testbow tie
+    let bowtie = NSEntityDescription.insertNewObject(forEntityName: "Bowtie", into: self.persistentContainer.viewContext) as! Bowtie
+    bowtie.name = "My Bow Tie"
+    bowtie.lastWorn = NSDate()
+    
+    
+    //Retreive test bow tie
+    do {
+      let request = NSFetchRequest<Bowtie>(entityName : "Bowtie")
+      let ties = try self.persistentContainer.viewContext.fetch(request)
+      let sample = ties.first
+      print("Name : \(sample?.name), Worn : \(sample?.lastWorn)")
+    } catch let error as NSError {
+      print("Fetching error : \(error), \(error.userInfo)")
+    }
+
+
+7. Pass Context from class to class
+
+    //in App delegate
+    guard let vc = window?.rootViewController as? ViewController else {
+      return true
+    }
+    
+    vc.managedContext = persistentContainer.viewContext
+    
+
+Reding from plist and save the context
+-------------------------------------
+
+func insertSampleData() {
+    let fetch = NSFetchRequest<Bowtie>(entityName : "Bowtie")
+    fetch.predicate = NSPredicate(format: "searchKey != nil")
+    
+    let count = try! managedContext.count(for: fetch)
+    
+    if count > 0 {
+      return
+    }
+    
+    let path = Bundle.main.path(forResource: "SampleData", ofType: "plist")
+    let dataArray = NSArray(contentsOfFile: path!)!
+    for dict in dataArray {
+      let entity = NSEntityDescription.entity(forEntityName: "Bowtie", in: managedContext)!
+      let bowtie = Bowtie(entity : entity, insertInto : managedContext)
+      let btDict = dict as! [String : AnyObject]
+      
+      bowtie.name = btDict["name"] as? String
+      bowtie.searchKey = btDict["searchKey"] as? String
+      bowtie.rating = btDict["rating"] as! Double
+      let colorDict = btDict["tintColor"] as! [String : AnyObject]
+      bowtie.tintColor = UIColor.color(dict: colorDict)
+      
+      let imageName = btDict["imageName"] as? String
+      let image = UIImage(named: imageName!)
+      let photoData = UIImagePNGRepresentation(image!)!
+      bowtie.photoData = NSData(data: photoData)
+      
+      bowtie.lastWorn = btDict["lastWorn"] as? NSDate
+      let timesNumber = btDict["timesWorn"] as! NSNumber
+      bowtie.timesWorn = timesNumber.int32Value
+      bowtie.isFavourite = btDict["isFavorite"] as! Bool
+      
+    }
+    
+    try! managedContext.save()
+  }
+  
+  
+  Check before update
+  -------------------
+  
+      func update(rating : String?) {
+        guard let ratingString  = rating ,
+          let rating = Double(ratingString) else {
+          return
+        }
+
+        do {
+          currentBowtie.rating = rating
+          try managedContext.save()
+          populate(bowtie: currentBowtie)
+
+        } catch let error as NSError {
+          if error.domain == NSCocoaErrorDomain &&
+            ( error.code == NSValidationNumberTooLargeError ||
+              error.code == NSValidationNumberTooSmallError ) {
+          rate(currentBowtie)
+          }
+          print("Could not save \(error),\(error.userInfo)")
+        }
+      }
+
+
+Level 3
+=======
+
+Creating the Stack Object
+-------------------------
+
+            
+            class CoreDataStack {
+  
+                  private let modelName : String
+
+                  init(modelName : String) {
+                    self.modelName = modelName
+                  }
+
+                  private lazy var storeContainer : NSPersistentContainer = {
+                     let container = NSPersistentContainer(name: self.modelName)
+                    container.loadPersistentStores {(storeDescription , error) in
+
+                      if let error = error as NSError? {
+                        print("Unresolved error \(error), \(error.userInfo)")
+                      }
+                    }
+
+                    return container
+                  }()
+
+
+
+                  lazy var managedContext : NSManagedObjectContext = {
+                    return self.storeContainer.viewContext
+                  }()
+
+                  func saveContext() {
+                    guard managedContext.hasChanges  else {
+                      return
+                    }
+
+                    do {
+                      try managedContext.save()
+                    } catch let error as NSError {
+                      print("Unresolved error \(error), \(error.userInfo)")
+                    }
+                  }
+
+            }
+
+
+load context in app delegate
+----------------------------
+
+
+        import UIKit
+        import CoreData
+
+        @UIApplicationMain
+        class AppDelegate: UIResponder, UIApplicationDelegate {
+
+          var window: UIWindow?
+          lazy var coreDataStack = CoreDataStack(modelName: "Dog Walk")
+
+          func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+
+            guard let navController = window?.rootViewController as? UINavigationController ,
+              let viewController = navController.topViewController as? ViewController   else {
+                return true
+            }
+
+            viewController.managedContext = coreDataStack.managedContext
+            return true
+          }
+
+
+          func applicationDidEnterBackground(_ application: UIApplication) {
+            coreDataStack.saveContext()
+          }
+
+          func applicationWillTerminate(_ application: UIApplication) {
+            coreDataStack.saveContext()
+          }
+        }
+        
+        
+Add context property in conteollers
+-----------------------------------
+
+ var managedContext : NSManagedObjectContext!
+ 

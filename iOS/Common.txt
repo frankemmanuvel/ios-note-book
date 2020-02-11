@@ -1,0 +1,158 @@
+1. Hide status bar 
+
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+    
+2. Add round coners to an image in a table view cell
+
+    cell.thumbnailImage.layer.cornerRadius = 30.0
+    cell.thumbnailImage.clipsToBounds = true
+    
+    // Doing the same thing using interface builder
+    - select the image
+    - select identity inspector
+    - click on +
+    - add key value as layer.cornerRadius : 30
+    - select image.
+    - navigate to attribute inspector and select "Clip to bounds"
+    
+3. Change Status bar style
+
+    - in view controllers
+    
+    override func preferredStatusBarStyle() -> UIStatusBarStyle {
+        return .lightContent
+    }
+    
+    - for entier application
+    
+        * go to info.plist
+        * right click , add new raw
+        * View controller base status bar appearance - to - No
+        * go to appDelegate, didFinishLaunch
+        
+        UIApplication.shared.statusBarStyle = .lightContent
+        
+4. Add blure effect
+ 
+    - class UIBlureEffect
+    
+   
+        let blureEffect = UIBlurEffect(style: .dark)
+        let blureEffectView = UIVisualEffectView(effect: blureEffect)
+        blureEffectView.frame = view.bounds
+        restaurantImageView.addSubview(blureEffectView)
+        
+5. Change view scale 
+
+    * containerView.transform = CGAffineTransform.init(scaleX : 0 , y : 0)
+    * self.containerView.transform = CGAffineTransform.identity
+    
+6. change view position
+
+    containerView.transform = CGAffineTransform.init(translationX: 0, y: -1000)
+
+7. Combine transform
+
+    
+        let scaleTransform = CGAffineTransform.init(scaleX : 0 , y : 0)
+        let translateTransform = CGAffineTransform.init(translationX: 0, y: -1000)
+        let combineTransform = scaleTransform.concatenating(translateTransform)
+        containerView.transform = combineTransform
+        
+        
+8. Image Picker
+===============
+
+a. Add Image Picker in table row select
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.row == 0 {
+            if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
+                let imagePicker = UIImagePickerController()
+                imagePicker.allowsEditing = false
+                imagePicker.sourceType = .photoLibrary
+                present(imagePicker, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    // add permissions in the info.plist
+    Privacy - Photo Library Usage Description
+    You need to grant the app access to your photo library so you can pick your favorite restaurant photo.
+    
+    
+b. get selected image
+
+    - Add Delegate protocols UIImagePickerControllerDelegate , UINavigationControllerDelegate
+    - imagePicker.delegate = self
+    - create referance ti the image view and overide the following method
+    
+        extension AddRestaurantController : UIImagePickerControllerDelegate , UINavigationControllerDelegate {
+            func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+                if let selectedImage = info[UIImagePickerControllerOriginalImage]   as? UIImage {
+                    photoImageView.image = selectedImage
+                    photoImageView.contentMode = .scaleToFill
+                    photoImageView.clipsToBounds = true
+                }
+                dismiss(animated: true, completion: nil)
+            }
+        }
+    
+
+9. Date Formatter
+
+     let dateformatter = DateFormatter()
+    dateformatter.dateStyle = .short
+    dateformatter.timeStyle = .none
+    
+    lastWornLabel.text = "Last worn: " + dateformatter.string(from: lastWorn)
+    
+
+10. Extension to convert rgb values to UIColor
+
+        private extension UIColor {
+          static func color(dict : [String : AnyObject]) -> UIColor? {
+            guard let red = dict["red"] as? NSNumber,
+              let green = dict["green"] as? NSNumber,
+              let blue = dict["blue"] as? NSNumber else {
+                return nil
+            }
+
+            return UIColor(red: CGFloat(red)/255.0, green: CGFloat(green)/255.0, blue: CGFloat(blue)/255.0, alpha: 1)
+          }
+        }
+
+
+11. Did set class properties - mainly for pass objects for the destination controller via segue
+
+        var park : Park? {
+            didSet {
+                if let nationalPark = park {
+                    image.image = UIImage(named: nationalPark.photo)
+                    textLabel.text = park?.state
+                }
+            }
+        }
+
+12. Add spinner in code (in view did load)
+
+
+        let spinner : UIActivityIndicatorView = UIActivityIndicatorView()
+        spinner.activityIndicatorViewStyle = .gray
+        spinner.center = view.center
+        spinner.hidesWhenStopped = true
+        view.addSubview(spinner)
+        spinner.startAnimating()
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,39 @@
+Core Data Stack
+    1. NSManagedObjectModel
+    2. NSPersistantStore
+    3. NSPersistantStoreCoordinator
+    4. NSManagedObjectContext
+    
+    
+NSManagedObjectModel
+--------------------
+    Represent each object type in the app data model
+    
+NSPersistantStore
+-----------------
+    - Atomic
+        load complete model into memory
+    - NonAtomic
+        load chunks into memory
+        
+    * Core data types
+
+        - NSQLiteStoreType (non-atomic)
+        - NSXMLStoreType (atomic)
+        - NSBinaryStoreType (atomic)
+        - NSInMemoryStoreType (atomic)
+    
+Create own persistant store typ by Subclassing NSIncrementalStroe
+
+NSPersistantStoreCoordinator
+----------------------------
+    - Bridge between managed object model and persistant store
+    
+NSManagedObjectContext
+----------------------
+    
+    
+#PersistantContainer ( for All )
+
+
+

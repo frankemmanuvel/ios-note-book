@@ -1,0 +1,268 @@
+1. Free Spaces
+    10GB - Assets
+    100MB - database
+    2GB - data transfer
+    
+2. Container - CKContainer
+        public database - default zone
+        shared database - shared zones
+        private database - default zone / custom zone
+        
+3. database - CKDatabase
+
+4. zone - CKRecordZone
+
+5. record - CKRecord
+
+6. Cloudkit Api 
+
+    * convenience api
+    * operational api
+    
+7. fetch records
+
+    Using convenience api
+    ---------------------
+    
+     func fetchRecordsFromCloud() {
+        // Fetch data using convenience api
+        let cloudContainer = CKContainer.default()
+        let publicDatabase = cloudContainer.publicCloudDatabase
+        let predicate = NSPredicate(value: true)
+        let query = CKQuery(recordType : "Restaurant" , predicate : predicate)
+        publicDatabase.perform(query, inZoneWith: nil, completionHandler: {
+            (results, error) -> Void in
+            
+            if error != nil {
+                print(error ?? "error")
+                return
+            }
+            
+            if let results = results {
+                print("Completed the dowmload of Restaurant data")
+                self.restaurants = results
+                
+                OperationQueue.main.addOperation {
+                    self.tableView.reloadData()
+                }
+                
+            }
+        
+        })
+    }
+    
+
+    using operational api
+    ---------------------
+    
+    func fetchRecordsUsingOperationalApi()  {
+        let cloudContainer = CKContainer.default()
+        let publicDatabase = cloudContainer.publicCloudDatabase
+        let predicate = NSPredicate(value: true)
+        let query = CKQuery(recordType: "Restaurant", predicate: predicate)
+        
+        // create the query operation with the query
+        let queryOperation = CKQueryOperation(query: query)
+        queryOperation.desiredKeys = ["name", "image"]
+        queryOperation.queuePriority = .veryHigh
+        queryOperation.resultsLimit = 50
+        queryOperation.recordFetchedBlock = {
+            (record) -> Void in
+            self.restaurants.append(record)
+        }
+        
+        queryOperation.queryCompletionBlock = {
+            (cusor, error) -> Void in
+            
+            if let error = error {
+                print("Failed to get data from iCloud - \(error.localizedDescription)")
+                return
+            }
+            
+            print("Successfully load the data from the iCloud")
+            OperationQueue.main.addOperation {
+                self.tableView.reloadData()
+            }
+        }
+        
+        publicDatabase.add(queryOperation)
+        
+        
+    }
+
+
+add lazy loadind to images
+--------------------------
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        
+        // Configure the cell...
+        let restaurant = restaurants[indexPath.row]
+        cell.textLabel?.text = restaurant.object(forKey: "name") as? String
+        
+        //set the default image
+        cell.imageView?.image = UIImage(named: "photoalbum")
+        
+        //Fetch image from cloud in background
+        let publicDatabase = CKContainer.default().publicCloudDatabase
+        let fetchRecordsImageOperation = CKFetchRecordsOperation(recordIDs: [restaurant.recordID])
+        fetchRecordsImageOperation.desiredKeys = ["image"]
+        fetchRecordsImageOperation.queuePriority = .veryHigh
+        
+        fetchRecordsImageOperation.perRecordCompletionBlock = {
+            (record , recordId , error) -> Void in
+            
+            if let error = error {
+                print("Failed to get restaurant image : \(error.localizedDescription)")
+                return
+            }
+            
+            if let restaurantRecord = record {
+                OperationQueue.main.addOperation {
+                    if let image = restaurantRecord.object(forKey: "image"){
+                        let imageAsset = image as! CKAsset
+                        if let imageData = try? Data.init(contentsOf: imageAsset.fileURL) {
+                            cell.imageView?.image = UIImage(data: imageData)
+                        }
+                    }
+                }
+                
+            }
+        }
+        
+        
+        publicDatabase.add(fetchRecordsImageOperation)
+        return cell
+    }
+
+    
+image caching
+-------------
+        var imageCache = NSCache<CKRecordID,NSURL>()
+        
+        
+        override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        
+        // Configure the cell...
+        let restaurant = restaurants[indexPath.row]
+        cell.textLabel?.text = restaurant.object(forKey: "name") as? String
+        
+        //set the default image
+        cell.imageView?.image = UIImage(named: "photoalbum")
+        
+        //check if the image is stored in the cache
+        if let imageFileUrl = imageCache.object(forKey: restaurant.recordID){
+            //get image frfom cache
+            print("get image from cache")
+            
+            if let imageData = try? Data.init(contentsOf: imageFileUrl as URL ) {
+                cell.imageView?.image = UIImage(data: imageData)
+            }
+        } else {
+            //Fetch image from cloud in background
+            let publicDatabase = CKContainer.default().publicCloudDatabase
+            let fetchRecordsImageOperation = CKFetchRecordsOperation(recordIDs: [restaurant.recordID])
+            fetchRecordsImageOperation.desiredKeys = ["image"]
+            fetchRecordsImageOperation.queuePriority = .veryHigh
+            
+            fetchRecordsImageOperation.perRecordCompletionBlock = {
+                (record , recordId , error) -> Void in
+                
+                if let error = error {
+                    print("Failed to get restaurant image : \(error.localizedDescription)")
+                    return
+                }
+                
+                if let restaurantRecord = record {
+                    OperationQueue.main.addOperation {
+                        if let image = restaurantRecord.object(forKey: "image"){
+                            let imageAsset = image as! CKAsset
+                            if let imageData = try? Data.init(contentsOf: imageAsset.fileURL) {
+                                cell.imageView?.image = UIImage(data: imageData)
+                            }
+                            
+                            // Add image url to cache
+                            self.imageCache.setObject(imageAsset.fileURL as NSURL, forKey: restaurant.recordID)
+                        }
+                    }
+                    
+                }
+            }
+            publicDatabase.add(fetchRecordsImageOperation)
+            
+            
+        }
+        return cell
+    }
+
+
+add refresher
+-------------
+
+
+        //Pull to refresh control
+        refreshControl = UIRefreshControl()
+        refreshControl?.backgroundColor = UIColor.white
+        refreshControl?.tintColor = UIColor.gray
+        refreshControl?.addTarget(self, action: #selector(fetchRecordsUsingOperationalApi), for: UIControlEvents.valueChanged)
+        
+        
+        //remove all data
+        restaurants.removeAll()
+        tableView.reloadData()
+        
+        // end refresh
+        if let refreshControl = self.refreshControl {
+            if refreshControl.isRefreshing {
+                refreshControl.endRefreshing()
+            }
+        }
+        
+ save records
+ --------------
+ 
+        func saveRecordToCloud(restaurant : RestaurantMO!) -> Void {
+            //Prepare the record to save
+            let record = CKRecord(recordType: "Restaurant")
+            record.setValue(restaurant.name, forKey: "name")
+            record.setValue(restaurant.type, forKey: "type")
+            record.setValue(restaurant.location, forKey: "location")
+            record.setValue(restaurant.phone, forKey: "phone")
+
+            let imageData = restaurant.image as! Data
+
+            //resize the image
+            let originalImage = UIImage(data: imageData)!
+            let scaleFactor = (originalImage.size.width > 1024) ? 1024 / originalImage.size.width : 1.0
+            let scaledImage = UIImage(data: imageData, scale : scaleFactor)!
+
+            //Write image to localfile for tempary use
+            let imageFilePath = NSTemporaryDirectory() + restaurant.name!
+            let imageFileUrl = URL(fileURLWithPath: imageFilePath)
+            try? UIImageJPEGRepresentation(scaledImage, 0.8)?.write(to: imageFileUrl)
+
+            //create imageasset for upload
+            let imageAsset = CKAsset(fileURL: imageFileUrl)
+            record.setValue(imageAsset, forKey: "image")
+
+            //get the public iCloud database
+            let publicDatabase = CKContainer.default().publicCloudDatabase
+
+            //save the record to icloud
+            publicDatabase.save(record, completionHandler: {(record , error) -> Void in
+                //remove temp file
+                try? FileManager.default.removeItem(at: imageFileUrl)
+
+            })
+
+
+
+        }
+        
+        
+Sorting the results by creating date
+------------------------------------
+
+query.sortDescriptors = [NSSortDescriptor(key : "creationDate", ascending: false)]

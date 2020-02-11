@@ -1,0 +1,25 @@
+UserDefaults Types
+==================
+
+array(forKey :)
+bool(forKey :)
+data(forKey :)
+dictionary(forKey :)
+float(forKey :)
+integer(forKey :)
+object(forKey :)
+stringArray(forKey :)
+string(forKey :)
+double(forKey :)
+url(forKey :)
+
+- when click on done button
+    UserDefaults.standard.set(true, forKey : "hasViewedWalkthrough")
+
+- When load the main view - viewDidApear
+
+        if UserDefaults.standard.bool(forKey: "hasViewedWalkthrough") {
+            return
+        }
+
+

@@ -1,0 +1,62 @@
+UISearchController
+=================
+
+var searchController : UISearchController!
+searchcontroller = UISearchController(searchResultsController : nil) // nil means search results should appear in the same window
+searchController.searchResultsUpdater = self  //which objecs should updating
+tableView.tableHeaderView = searchController.searchBar
+
+Filter
+======
+
+        func filterContent(for searchText : String) {
+            searchResults = restaurants.filter({
+                (restaurant) -> Bool in
+                if let name  = restaurant.name {
+                    let isMatch = name.localizedCaseInsensitiveContains(searchText)
+                    return isMatch
+                }
+
+                return false
+
+            })
+        }
+
+Updating cells
+=============
+
+1. Implement the Protocol : UISearchResultsUpdating 
+
+2. Upadate the method
+
+        extension RestaurantTableViewController : UISearchResultsUpdating {
+            func updateSearchResults(for searchController: UISearchController) {
+                if let searchText = searchController.searchBar.text {
+                    filterContent(for: searchText)
+                    tableView.reloadData()
+                }
+            }
+        }
+        
+3. Update number of rows function
+
+        override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+            if searchController.isActive {
+                return searchResults.count
+            } else {
+                return restaurants.count
+            }
+        }
+        
+4. Update cell for row at index path method
+
+    let restaurant  = (searchController.isActive) ? searchResults[indexPath.row]  : restaurants[indexPath.row]
+    
+5. Update can edit 
+
+6. Change the Appearance
+
+        searchController.searchBar.placeholder = "Search restaurants..."
+        searchController.searchBar.tintColor = UIColor.white
+        searchController.searchBar.barTintColor = UIColor(red: 218.0/255.0, green: 100.0/255.0, blue: 70.0/255.0, alpha: 1.0)

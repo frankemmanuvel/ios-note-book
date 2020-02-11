@@ -1,0 +1,74 @@
+Segue Types
+===========
+A. Show
+-------
+    - content is pushed on top of the current view
+    - back button is displayed in the navigation bar for navigation back
+    - Typically use for navigations
+
+B. Show Detail
+--------------
+    -   like Show segue, But replaces the current controller
+    Eg: No navigation bar and back button appear in the destination view controller althouth the current view controller have a navigation bar.
+
+C. Present modally
+------------------
+    - destination controller animate from bottom and covers the current view
+    Eg: Calender app + button - iPhone
+
+D. Present as Popover
+---------------------
+    - Present content as a popover.
+    Eg: calender app + button - iPad
+
+
+1. Embed a table view controller in a navigation controller
+
+    - Select the table view controller
+    - click on Editor -> Embed In -> Navigation Controller
+    
+2. change the appearance.
+
+- change colors and entier appearnce can be done in the App delegate class, inside didFinishLanching method
+
+    UINavigationBar.appearance().tintColor = UIColor.white
+        UINavigationBar.appearance().barTintColor = UIColor(red: 255.0/255.0, green: 136.0/255.0, blue: 7.0/255.0, alpha: 1.0)
+        
+        if let barFont = UIFont(name: "Avenir-Light", size: 24.0){
+            UINavigationBar.appearance().titleTextAttributes = [NSForegroundColorAttributeName:UIColor.white , NSFontAttributeName:barFont]
+        }
+        
+
+3. change navigatin back button text
+
+    navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+
+4. set title 
+
+    - in view did load
+    
+    title = currentRestaurant?.name
+    
+5. Hide Navigatin bar on swipe and unhide it
+
+    - hide
+    
+         override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.hidesBarsOnSwipe = true
+    }
+    
+    - unhide
+    
+        override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        navigationController?.hidesBarsOnSwipe = false
+        navigationController?.setNavigationBarHidden(false, animated: true)
+    }
+    
+6. Add button to navigation controller
+
+    Select a bar button fron the object library.
+    Drag and drop it to the navigation controller.
+    

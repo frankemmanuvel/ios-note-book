@@ -1,0 +1,120 @@
+Frame : Seen by super view
+Bounds : Own coordinate system
+
+1. Get vies posision ( frame & Bounds )
+
+        frameXLabel.text = "Frame.x = \(containerView.frame.origin.x)"
+        frameYLabel.text = "Frame.y = \(containerView.frame.origin.y)"
+        boundsXLabel.text = "Bounds.x = \(containerView.bounds.origin.x)"
+        boundsYLabel.text = "Bounds.y = \(containerView.bounds.origin.y)"
+        
+2. UIScrollViewDelegate
+
+    - add  scrollView.delegate = self inside viewDidLoad
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        boundsOriginLabel.text = "Bounds orgin x : \(scrollView.bounds.origin.x) y : \(scrollView.bounds.origin.y)"
+    }
+
+3. Create ScrollView and add subviews to the view
+
+        var imageView : UIImageView!
+        var scrollView : UIScrollView!
+        var boundsOriginLabel : UILabel!
+    
+        imageView = UIImageView(image: UIImage(named : "OEMBTH0.jpg"))
+        
+        scrollView = UIScrollView(frame: view.bounds)
+        scrollView.autoresizingMask = .flexibleWidth
+        scrollView.backgroundColor = UIColor.blue
+        scrollView.contentSize = imageView.bounds.size
+        //scrollView.contentOffset = CGPoint(x: 200, y: 100)
+        scrollView.delegate = self
+        boundsOriginLabel = UILabel(frame: CGRect(x: 10, y: 10, width: 400, height: 30))
+        boundsOriginLabel.text = "Bounds orgin x : \(scrollView.bounds.origin.x) y : \(scrollView.bounds.origin.y)"
+        
+        scrollView.addSubview(imageView)
+        
+        view.addSubview(boundsOriginLabel)
+        view.addSubview(scrollView)
+        view.bringSubview(toFront: boundsOriginLabel)
+
+4. Add zoom
+
+    //in view didload
+     scrollView.minimumZoomScale = 0.1
+        scrollView.maximumZoomScale = 3.0
+        scrollView.zoomScale = 1.0
+
+    // delegate function
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+        return imageView
+    }
+    
+5. Set a zoom scale
+
+      func setZoomParametersForSize(scrollViewZize : CGSize)  {
+        let imageSize = imageView.bounds.size
+        
+        let widthScale = scrollViewZize.width / imageSize.width
+        let heightScale = scrollViewZize.height / imageSize.height
+        let minScale = min(widthScale , heightScale)
+        
+        scrollView.minimumZoomScale = minScale
+        scrollView.maximumZoomScale = 3.0
+        scrollView.zoomScale = minScale
+    }
+    
+6. Set in screen rotations
+
+    override func viewWillLayoutSubviews() {
+        setZoomParametersForSize(scrollViewZize: scrollView.bounds.size)
+    }
+    
+7. centering content adding content insets
+
+        let scrollViewSize = scrollView.bounds.size
+        let imageSize = imageView.frame.size
+        
+        let horizontalSpace = imageSize.width < scrollViewSize.width ? (scrollViewSize.width - imageSize.width)/2 : 0
+        let verticalSpace = imageSize.height < scrollViewSize.height ? (scrollViewSize.height - imageSize.height)/2 : 0
+        
+        scrollView.contentInset = UIEdgeInsets(top: verticalSpace, left: horizontalSpace, bottom: verticalSpace, right: horizontalSpace)
+
+8. Use content insets to unhide text fields when keyboard pops up
+
+    use notifacions for keybord
+        - keyboardWillShow (add content inset at the bottom keyboardHeight + additional     height)
+        - keyboardWillHide ( Remove the added content inset)
+        
+    - in viewdid load
+    NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)) , name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)) , name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        
+        
+        
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    func keyboardWillShow(notification : Notification) {
+        print("keyboard Opened")
+        adjustInsetForKeyBoardShow(show: true, notification: notification)
+        
+    }
+
+    func keyboardWillHide(notification : Notification) {
+        print("keyboard hide")
+        adjustInsetForKeyBoardShow(show: false, notification: notification)
+    }
+    
+    func adjustInsetForKeyBoardShow(show : Bool , notification : Notification) {
+        let userInfo = notification.userInfo ?? [:]
+        let keyboardFrame = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).cgRectValue
+        let adjustmentHeight = (keyboardFrame.height - navigationController!.toolbar.frame.height + 20) * (show ? 1 : -1)
+        fgScrollView.contentInset.bottom += adjustmentHeight
+        fgScrollView.scrollIndicatorInsets.bottom += adjustmentHeight
+    }
+        
+9. 
+    

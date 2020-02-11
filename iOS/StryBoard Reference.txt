@@ -1,0 +1,2 @@
+1. Select the required view controllers with navigations.
+2. Editor -> Refactor StoryBoard -> "Name"

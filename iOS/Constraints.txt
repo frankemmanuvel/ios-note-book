@@ -1,0 +1,19 @@
+1. Add constraints programatically
+
+        // leading constraint
+        let leadingConstraint = NSLayoutConstraint(item: photoImageView, attribute: NSLayoutAttribute.leading, relatedBy: NSLayoutRelation.equal, toItem: photoImageView.superview, attribute: NSLayoutAttribute.leading, multiplier: 1, constant: 0)
+        leadingConstraint.isActive = true
+        
+        // trailingConstraint
+        let tralingConstraint = NSLayoutConstraint(item: photoImageView, attribute: NSLayoutAttribute.trailing , relatedBy: NSLayoutRelation.equal, toItem: photoImageView.superview, attribute: NSLayoutAttribute.trailing, multiplier: 1, constant: 0)
+        tralingConstraint.isActive = true
+        
+        // top constraint
+        let topConstraint = NSLayoutConstraint(item: photoImageView, attribute: NSLayoutAttribute.top, relatedBy: NSLayoutRelation.equal, toItem: photoImageView.superview, attribute: NSLayoutAttribute.top, multiplier: 1, constant: 0)
+        topConstraint.isActive = true
+        
+        // bottom constraint
+        let bottomConstraint = NSLayoutConstraint(item: photoImageView, attribute: NSLayoutAttribute.bottom, relatedBy: NSLayoutRelation.equal, toItem: photoImageView.superview, attribute: NSLayoutAttribute.bottom, multiplier: 1, constant: 0)
+        bottomConstraint.isActive = true
+
+2. 

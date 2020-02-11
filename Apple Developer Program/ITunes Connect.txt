@@ -1,0 +1,51 @@
+ITunes Connect Icons
+====================
+
+My Apps
+-------
+    - Create view and manage the app
+    - Manage metadata and assets 
+        Eg: Screenshots
+    - Configure store technologies
+        Eg: inApp Purchase
+    - Testflight Beta Testing
+    - Request promo codes
+    
+Sales and Trends
+----------------
+    - View sales and downloads
+    - Filter your data
+    - Download reports
+    
+App Analytics
+-------------
+    - Analyze sales and usage data
+    - Track web links and campaigns
+    
+Payments and Financial Reports
+------------------------------
+    - View and download reports and payments
+    - See the exchange rate at time of payment
+    - View earnings based on currency
+    
+Users and Roles
+---------------
+    - Add and delets users
+    - Change users' roles
+    - Change notification settings
+    
+Agreement Tax and Banking
+-------------------------
+    - Accept Paid Applications Contract
+    - Enter tax and contact information
+    - Set up electronic banking
+    
+Resources and Help
+------------------
+    - Searchable help database
+    - Tutorial videos
+    - FAQs
+    - Apple Developer Forums
+    - Contact Us
+    
+

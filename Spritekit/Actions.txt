@@ -1,0 +1,74 @@
+1. Move Sprite
+
+    let actionMove = SKAction.move(to: CGPoint(x : -enemy.size.width/2 , y : enemy.position.y) , duration: 2.0)
+        enemy.run(actionMove)
+2. Block of code
+
+    let logMessage = SKAction.run({print("Enemy")})
+    
+3. Run sequence
+
+    let sequenceAction = SKAction.sequence([actionMove , logMessage])
+    enemy.run(sequenceAction)
+    
+4. Wait for duration 
+
+    let watForDuration = SKAction.wait(forDuration: 2.0)
+        
+        let sequenceAction = SKAction.sequence([watForDuration, actionMove , logMessage])
+        
+5. reverse action 
+
+    actionMove.reversed()
+    
+6. repeat action forever
+
+    let repeatAction  = SKAction.repeatForever(sequenceAction)
+    
+7. remove from parent 
+
+    SKAction.removefromParent()
+    
+8. Add textur animation
+
+    let zombieAnimation : SKAction
+    
+    override init ( size : CGSize){
+        var textures : [SKTexture] = []
+        for i in 1...4 {
+            textures.append(SKTexture(imageNamed: "zombie\(i)"))
+        }
+        
+        textures.append(textures[2])
+        textures.append(textures[1])
+        
+        zombieAnimation = SKAction.animate(with: textures, timePerFrame: 0.1)
+        
+        super.init(size: size)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+9. Add and remove actions using keys
+
+    func startZombieAnimation()  {
+        if zombie.action(forKey: "animation") == nil {
+            zombie.run(SKAction.repeatForever(zombieAnimation), withKey: "animation")
+        }
+    }
+    
+    func stopZombieAnimation()  {
+        zombie.removeAction(forKey: "animation")
+    }
+
+10. Group Actions
+
+    let scaleUp  = SKAction.scale(by: 1.2, duration: 0.25)
+        let scaleDown = scaleUp.reversed()
+        let fullScale = SKAction.sequence([scaleUp , scaleDown ,scaleUp , scaleDown])
+        let group = SKAction.group([fullScale , fullWiggle])
+        let groupWait = SKAction.repeat(group, count: 10)
+        
+11. 

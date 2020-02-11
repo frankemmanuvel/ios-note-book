@@ -1,0 +1,13 @@
+1. Scale animation       
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.containerView.transform = CGAffineTransform.identity
+        })
+        
+2. Spring animation
+
+     UIView.animate(withDuration: 0.4, delay: 0.0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.2, options: .curveEaseInOut, animations: {
+                self.containerView.transform = CGAffineTransform.identity
+            }, completion: nil)
+            
+3.

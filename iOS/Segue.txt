@@ -1,0 +1,73 @@
+Segue Types
+===========
+A. Show
+-------
+    - content is pushed on top of the current view
+    - back button is displayed in the navigation bar for navigation back
+    - Typically use for navigations
+
+B. Show Detail
+--------------
+    -   like Show segue, But replaces the current controller
+    Eg: No navigation bar and back button appear in the destination view controller althouth the current view controller have a navigation bar.
+
+C. Present modally
+------------------
+    - destination controller animate from bottom and covers the current view
+    Eg: Calender app + button - iPhone
+
+D. Present as Popover
+---------------------
+    - Present content as a popover.
+    Eg: calender app + button - iPad
+    
+    
+1. First declare variables in the destination View controller.
+
+    var restaurantImage = ""
+    
+    @IBOutlet weak var restaurantImageView: UIImageView!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        restaurantImageView.image = UIImage(named: restaurantImage)
+        // Do any additional setup after loading the view.
+    }
+    
+2. Select the segue and add an identifier in the attribute insppector
+
+3. overide the prepare for segue method in the source view controller
+
+4. Unwind segues
+
+    - add in destination controller
+    
+    @IBAction func ratingButtonTapped (segue : UIStoryboardSegue) {
+        if let rating = segue.identifier {
+            currentRestaurant?.isVisited = true
+            
+            switch rating {
+            case "great":
+                currentRestaurant!.rating = "Absolutely love it! Must Try."
+            case "good":
+                currentRestaurant!.rating = "Pretty good."
+            case "dislike":
+                currentRestaurant!.rating = "I don't like it."
+            default:
+                break
+            }
+        }
+        tableView.reloadData()
+    }
+    
+    - control drag from the button to Exit and select unwind segue name.
+    - Give a unique identifier to the segue
+    
+5. Perform segue
+
+    func showMap() {
+        performSegue(withIdentifier: "showMap", sender: self)
+    }
+    
+    

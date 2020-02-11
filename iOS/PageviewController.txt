@@ -1,0 +1,166 @@
+1. Object Library -> Page view Controller
+
+2. Give Storyboard Id in Identity inspector
+
+3. Use atribute  inspector to change the page scroll type and other properties
+
+4. Add a View Controller and give a specific story boar Id
+
+5. Create a Class for content
+
+    @IBOutlet weak var headingLabel: UILabel!
+    @IBOutlet weak var contentImage: UIImageView!
+    @IBOutlet weak var contentLabel: UILabel!
+    
+    var index =  0
+    var heading = ""
+    var imageFile = ""
+    var content = ""
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        headingLabel.text = heading
+        contentLabel.text = content
+        contentImage.image = UIImage(named: imageFile)
+    }
+    
+6. Create a Class for Page View implementing UIPageViewControllerDataSource
+
+
+
+    class WalkThroughPageViewController: UIPageViewController , UIPageViewControllerDataSource {
+
+    
+        var pageHeadings = ["Personalize", "Locate", "Discover"]
+        var pageImages = ["foodpin-intro-1", "foodpin-intro-2", "foodpin-intro-3"]
+        var pageContent = ["Pin your favorite restaurants and create your own food guide",
+            "Search and locate your favourite restaurant on Maps",
+            "Find restaurants pinned by your friends and other foodies around the world"]
+
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            dataSource = self
+
+            if let startingViewController = contentViewController(at: 0) {
+                setViewControllers([startingViewController], direction: .forward, animated: true, completion: nil)
+            }
+        }
+
+        override func didReceiveMemoryWarning() {
+            super.didReceiveMemoryWarning()
+            // Dispose of any resources that can be recreated.
+        }
+
+
+        func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+            var index = (viewController as! WalkThroughContentViewController).index
+            index -= 1
+
+            return contentViewController(at: index)
+        }
+
+        func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+            var index = (viewController as! WalkThroughContentViewController).index
+            index += 1
+            return contentViewController(at: index)
+        }
+
+        /*
+        // MARK: - Navigation
+
+        // In a storyboard-based application, you will often want to do a little preparation before navigation
+        override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+            // Get the new view controller using segue.destinationViewController.
+            // Pass the selected object to the new view controller.
+        }
+        */
+
+        func contentViewController(at index : Int) -> WalkThroughContentViewController? {
+            if index < 0 || index >= pageHeadings.count {
+                return nil
+            }
+
+            if let pageContentViewController = storyboard?.instantiateViewController(withIdentifier: "WalkthroughContentViewController") as? WalkThroughContentViewController {
+                pageContentViewController.imageFile = pageImages[index]
+                pageContentViewController.heading = pageHeadings[index]
+                pageContentViewController.content = pageContent[index]
+                pageContentViewController.index = index
+
+                return pageContentViewController
+            }
+
+            return nil
+
+        }
+
+    }
+    
+7. In First controller load the page controller 
+
+    override func viewDidAppear(_ animated: Bool) {
+        if let pageViewController = storyboard?.instantiateViewController(withIdentifier: "WalkthroughController") as? WalkThroughPageViewController {
+            present(pageViewController, animated: true , completion: nil)
+        }
+    }
+
+8. Add Page Indicator
+
+        func presentationCount(for pageViewController: UIPageViewController) -> Int {
+            return pageHeadings.count
+        }
+
+        func presentationIndex(for pageViewController: UIPageViewController) -> Int {
+            if let pageContentViewController = storyboard?.instantiateViewController(withIdentifier: "WalkthroughContentViewController") as? WalkThroughContentViewController {
+                return pageContentViewController.index
+            }
+            return 0
+        }
+
+9. Add Custom Page Indicator
+
+        - Drag and drop  a page control from the object library
+        - make the connectioin
+        - Change the selected page using index variable
+        
+            pageControl.currentPage = index
+            
+10. Add Next / Done Button
+
+    - creata @IbOutlet and @IbAction
+    - In view did load in the content controller - change the button title
+    
+        switch index {
+        case 0...1 :
+            forwareButton.setTitle("NEXT", for: .normal)
+        case 2 :
+            forwareButton.setTitle("DONE", for: .normal)
+        default:
+            break
+        }
+        
+    - Button Action
+    
+              @IBAction func nextButtonTapped(_ sender: UIButton) {
+                switch index {
+                    case 0...1:
+                        let pageViewController = parent as! WalkThroughPageViewController
+                        pageViewController.forward(index : index)
+                    case 2 :
+                        dismiss(animated: true, completion: nil)
+                    default:
+                        break
+                    }
+                }
+                
+        forward function in pageController
+        ----------------------------------
+        
+        func forward(index : Int) {
+            if let nextViewController = contentViewController(at: index + 1) {
+                setViewControllers([nextViewController], direction: .forward, animated: true, completion: nil)
+            }
+        }
+        
+        

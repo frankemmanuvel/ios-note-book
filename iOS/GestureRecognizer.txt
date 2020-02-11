@@ -1,0 +1,6 @@
+1. UITapGestureRecognizer
+
+    let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(showMap))
+    mapView.addGestureRecognizer(tapGestureRecognizer)
+    
+2. 

@@ -1,0 +1,394 @@
+Segue
+=====
+
+override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        //showDetailSegue
+        if segue.identifier == "showDetailSegue" {
+            if let indexPath = collectionView?.indexPathsForSelectedItems!.first {
+                if let park = parksDataSource.parkForItemAtIndexPath(indexPath){
+                    let destinationController = segue.destination as! DetailViewController
+                    destinationController.park = park
+                }
+            }
+        }
+    }
+    
+segue 2
+=======
+
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if let nationalPark = parksDataSource.parkForItemAtIndexPath(indexPath){
+            performSegue(withIdentifier: "showDetailSegue", sender: nationalPark)
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        //showDetailSegue
+        if segue.identifier == "showDetailSegue" {
+            
+            let destinationController = segue.destination as! DetailViewController
+            destinationController.park = sender as? Park
+            
+        }
+    }
+    
+Override functions
+================
+
+    override func numberOfSections(in collectionView: UICollectionView) -> Int {
+        // #warning Incomplete implementation, return the number of sections
+        return 1
+    }
+    
+    
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        // #warning Incomplete implementation, return the number of items
+        return parksDataSource.count
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "collectionViewCell", for: indexPath) as! CollectionViewCell
+        
+        // Configure the cell
+        cell.textLabel.text = "Cell \(indexPath.row)"
+        cell.image.image = UIImage(named: parksDataSource.parkForItemAtIndexPath(indexPath)!.photo)
+        return cell
+    }
+    
+set equal width to cells
+========================
+        let width = collectionView!.frame.width / 3
+        let layout = collectionViewLayout as! UICollectionViewFlowLayout
+        layout.itemSize = CGSize(width: width, height: width)
+        
+
+prepare for reuse
+=================
+
+        override func prepareForReuse() {
+            image.image = nil
+        }
+        
+Add Section Header
+==================
+
+1. Select the collection view and in the attribute inspector select "Section Header"
+2. Select the section header from the document outline and chande the appearance and add a label.
+3. Create a custom class for the section header incliding outlet to label.
+
+    @IBOutlet weak var titleLabel : UILabel!
+    
+    var title : String? {
+        didSet{
+            titleLabel.text = title
+        }
+    }
+    
+4. Connect the class to Section geader view and then Connect the label to the outlet.
+5. Modify the following methods in MasterCollectionController.
+
+    override func numberOfSections(in collectionView: UICollectionView) -> Int {
+        // #warning Incomplete implementation, return the number of sections
+        return parksDataSource.numberOfSections
+    }
+    
+    
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        // #warning Incomplete implementation, return the number of items
+        return parksDataSource.numberOfParksInSection(section)
+    }
+    
+6. Set section header.
+
+    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        let sectionHeaderView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "collectionHeader", for: indexPath) as! SectionHeaderView
+        if let title = parksDataSource.titleForSectionAtIndexPath(indexPath){
+            sectionHeaderView.title = title
+        }
+        return sectionHeaderView
+    }
+    
+7. Pin the section header in scroll.
+    * Add this to viewDidLoad methos in MasterCollectionView Controller.
+    
+    layout.sectionFootersPinToVisibleBounds = true
+    
+
+Add refresh Controll
+====================
+
+1. Add to viewDidLoad
+
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshControlDidFire), for: .valueChanged)
+        collectionView?.refreshControl = refreshControl
+        
+2. add selector method
+
+        func refreshControlDidFire() {
+            // custom method()
+            collectionView?.refreshControl?.endRefreshing()
+        }
+
+Insert Items
+============
+
+        @IBAction func addPark(_ sender: UIBarButtonItem?) {
+            let indexPath = parksDataSource.indexPathForNewRandomPark()
+            UIView.animate(withDuration: 1.0, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0, options: UIViewAnimationOptions(), animations: {
+                () -> Void in
+
+                self.collectionView?.insertItems(at: [indexPath as IndexPath])
+            })
+        }
+        
+Subclassing
+===========
+1.
+
+        class ParksViewFlowLayout: UICollectionViewFlowLayout {
+            var  appearingIndexPath : IndexPath?
+
+            override func initialLayoutAttributesForAppearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+                guard let attributes = super.initialLayoutAttributesForAppearingItem(at: itemIndexPath) , let indexPath = appearingIndexPath , indexPath == itemIndexPath  else {
+                    return nil
+                }
+
+                attributes.alpha = 1.0
+                attributes.center = CGPoint(x: collectionView!.frame.width - 23.5, y: -24.5)
+                attributes.transform = CGAffineTransform(scaleX: 0.15, y: 0.15)
+                attributes.zIndex = 5
+
+                return attributes
+            }
+
+            override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+                var cache = [UICollectionViewLayoutAttributes]()
+
+                if let layoutAttributes = super.layoutAttributesForElements(in: rect){
+                    for attributes in layoutAttributes {
+                        let cellAttributes = attributes.copy() as! UICollectionViewLayoutAttributes
+                        if attributes.representedElementKind == nil {
+                            let frame = cellAttributes.frame
+                            cellAttributes.frame =  frame.insetBy(dx: 2.0, dy: 3.0)
+                        }
+                        cache.append(cellAttributes)
+                    }
+                }
+
+                return cache
+            }
+        }
+
+2. Modify Add new button action
+
+        @IBAction func addButtonTapped(_ sender: UIBarButtonItem?) {
+            let indexPath = parksDataSource.indexPathForNewRandomPark()
+            //collectionView!.insertItems(at: [indexPath])
+
+            let layout = collectionViewLayout as! ParksViewFlowLayout
+            layout.appearingIndexPath = indexPath
+
+            UIView.animate(withDuration: 1.0, delay: 0, usingSpringWithDamping: 0.65, initialSpringVelocity: 0.0, options: UIViewAnimationOptions(), animations: { () -> Void in
+
+              self.collectionView!.insertItems(at: [indexPath as IndexPath])
+            }, completion : { (finished : Bool) -> Void in
+                    layout.appearingIndexPath = nil
+            })
+        }
+
+
+Delete Cells
+============
+
+    1. Add a toolbar button
+    
+        @IBAction func deleteButtonTapped(_ sender: UIBarButtonItem) {
+                let indexPaths = collectionView!.indexPathsForSelectedItems! as [IndexPath]
+                parksDataSource.deleteItemsAtIndexPaths(indexPaths)
+                collectionView!.deleteItems(at: indexPaths)
+        }
+
+    2. Add edit button (in view did load)
+        navigationItem.leftBarButtonItem = editButtonItem
+        
+    3. Add selected image and connect it to cellViewClass
+        @IBOutlet weak var checkedImageView: UIImageView!
+        
+    4. Add method to set the correct image (cell class)
+            var editing: Bool = false {
+                didSet {
+                    captionLabel.isHidden = editing
+                    checkedImageView.isHidden = !editing
+                }
+            }
+
+            override var isSelected: Bool {
+                didSet {
+                    if editing {
+                        checkedImageView.image = UIImage(named: isSelected ? "Checked" : "Unchecked")
+                    }
+                }
+            }
+
+            override func prepareForReuse() {
+                super.prepareForReuse()
+
+                parkImageView.image = nil
+                captionLabel.text = ""
+
+                if editing {
+                    checkedImageView.image = UIImage(named: isSelected ? "Checked" : "Unchecked")
+                }
+            }
+            
+    5. Set editing method in master collection controller
+    
+            override func setEditing(_ editing: Bool, animated: Bool) {
+            super.setEditing(editing, animated: animated)
+
+            addButton.isEnabled = !editing
+            collectionView!.allowsMultipleSelection = editing
+            let indexPaths = collectionView!.indexPathsForVisibleItems as [IndexPath]
+            for indexPath in indexPaths {
+              collectionView!.deselectItem(at: indexPath, animated: false)
+              let cell = collectionView!.cellForItem(at: indexPath) as? ParkCell
+              cell!.editing = editing
+            }
+
+            if !editing {
+              navigationController!.setToolbarHidden(true, animated: animated)
+            }
+          }
+
+    6. Set cell editing before return the cell
+        cell.editing = isEditing
+        
+    7. Override didSelect and Deselect methods to control tool bar
+    
+         override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+            if !isEditing {
+              if let nationalPark = parksDataSource.parkForItemAtIndexPath(indexPath) {
+                performSegue(withIdentifier: "MasterToDetail", sender: nationalPark)
+              }
+            } else {
+              navigationController!.setToolbarHidden(false, animated: true)
+            }
+          }
+
+          override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+            if isEditing {
+              if collectionView.indexPathsForSelectedItems!.count == 0 {
+                navigationController?.setToolbarHidden(true, animated: true)
+              }
+            }
+          }
+
+Delete cells in actions
+=======================
+
+1. add variable to layout to hold the removing index paths
+
+    var deletingIndexPaths : [NSIndexPath]?
+    
+2. Add layout function to remove the cell
+
+        override func finalLayoutAttributesForDisappearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+
+
+            guard let attributes = super.finalLayoutAttributesForDisappearingItem(at: itemIndexPath), let indexPaths = deletingIndexPaths, indexPaths.contains(itemIndexPath as NSIndexPath) else {
+                return nil
+            }
+
+
+            attributes.alpha = 1.0
+            attributes.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+            attributes.zIndex = -1
+
+            return attributes
+        }
+    
+3. Pass removing cell indexes to layot from delete funcions and Add an animation to remove cells
+
+    override func finalLayoutAttributesForDisappearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+      
+        
+        guard let attributes = super.finalLayoutAttributesForDisappearingItem(at: itemIndexPath), let indexPaths = deletingIndexPaths, indexPaths.contains(itemIndexPath as NSIndexPath) else {
+            return nil
+        }
+        
+        
+        attributes.alpha = 1.0
+        attributes.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+        attributes.zIndex = -1
+        
+        return attributes
+    }
+
+
+    
+Cell Moving
+===========
+
+1. in view did load enable installsStandardGestureForInteractiveMovement
+
+    self.installsStandardGestureForInteractiveMovement = true
+
+2. if we need to add paging enabled for collecting view then add this to view did load
+
+    collectionView?.isPagingEnabled = true
+        
+3. Override move item at index path method
+
+        override func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+            parksDataSource.moveParkAtIndexPath(sourceIndexPath, toIndexPath: destinationIndexPath)
+        }
+        
+     
+Collection View cell prefetching
+================================
+
+1. set collection view prefetch delegate (in viewDidLoad)
+
+2. Implement the delegate
+
+        extension MasterViewController : UICollectionViewDataSourcePrefetching {
+
+        }
+
+3. implement delegate methods - prefetch method to load data before scroll
+
+        func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+            for indexPath in indexPaths {
+                if let _ = loadingOperations[indexPath] {
+                    return
+                }
+
+                if let thePark = parksDataSource.parkForItemAtIndexPath(indexPath) {
+                    let dataLoader = DataLoadOperation(thePark)
+                    loadingQueue.addOperation(dataLoader)
+                    loadingOperations[indexPath] = dataLoader
+                }
+            }
+        }
+
+4. Cancel prefetching if the user scroll fast
+
+        func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+            for indexPath in indexPaths {
+                if let dataLoader = loadingOperations[indexPath] {
+                    dataLoader.cancel()
+                    loadingOperations.removeValue(forKey: indexPath)
+                }
+            }
+        }
+
+        
+        
+        
+        
+        
+        
+        
+        
+    

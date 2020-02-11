@@ -1,0 +1,16 @@
+Categories
+==========
+
+    * Services
+    * Functionality
+    * Content
+    * Subscription
+    
+Types
+=====
+
+    * Consumable ( Eg : Coins, end when consume)
+    * Non-Consumable ( Eg : Book, One time purchase, stay forever)
+    * Non-renewing subscription ( Access for a period of time )
+    * Auto-renewing subscription
+    

@@ -1,0 +1,13 @@
+1. Open activity controller for share txt message
+
+    let defaultText = "Just checkin in at \(self.restaurants[indexPath.row].name)"
+            let activityController = UIActivityViewController(activityItems: [defaultText], applicationActivities: nil)
+            self.present(activityController, animated: true, completion: nil)
+            
+2. add image to share
+
+    if let imageToShare = UIImage(named: self.restaurants[indexPath.row].image) {
+            let activityController = UIActivityViewController(activityItems: [defaultText , imageToShare], applicationActivities: nil)
+                self.present(activityController, animated: true, completion: nil) }
+                
+3. 

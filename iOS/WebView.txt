@@ -1,0 +1,62 @@
+Load Safari in new window
+========================
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        switch indexPath.section {
+        case 0:
+            if indexPath.row == 0 {
+                if let url = URL(string: "http://www.apple.com") {
+                    UIApplication.shared.open(url, options: [:]   , completionHandler: nil)
+                }
+            }
+        default:
+            break
+        }
+        
+        tableView.deselectRow(at: indexPath, animated: false)
+    }
+    
+Using WKWebView
+===============
+
+1. Create a new view controller
+2. Create a segue to it and add an identifier
+3. Perform the segue
+
+         performSegue(withIdentifier: "showWebView", sender: self)
+         
+4. web view controller
+    
+    import WebKit
+
+    var webView : WKWebView!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        if let url = URL(string: "http://www.talene.education") {
+            let request = URLRequest(url: url)
+            webView.load(request)
+        }
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    override func loadView() {
+        webView = WKWebView()
+        view = webView
+    }
+
+Using Safari Services
+=====================
+
+        import SafariServices
+            
+        if let url = URL(string: links[indexPath.row]){
+            let safariController = SFSafariViewController(url: url)
+            present(safariController, animated: true, completion: nil)
+        }
+        

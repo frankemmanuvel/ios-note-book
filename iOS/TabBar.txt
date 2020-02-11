@@ -1,0 +1,18 @@
+1. Select the main navigation controller -> Go to editor -> Embed In -> Tab bar controller
+2. Remove tab bar for unwantde view controllers
+    - Select the viewcontroller -> Check Hide bottom bar on push
+3. Add new Navigation controllers to tab bar
+    - Add new navigation controllers from the object library.
+    - control drag from tab bar controller to new navigation controller
+    - Select Relationship Segue View Controller
+    
+4. Change the Appearance
+
+        UITabBar.appearance().tintColor = UIColor(red: 216.0/255.0, green: 74.0/255.0, blue: 32.0/255.0, alpha: 1.0)
+        UITabBar.appearance().barTintColor = UIColor(red: 41.0/255.0, green: 43.0/255.0, blue: 54.0/255.0, alpha: 1.0)
+       // UITabBarItem.appearance().setTitleTextAttributes([NSForegroundColorAttributeName: UIColor.white], for: .normal)
+
+5. Add selection image 
+
+    UITabBar.appearance().selectionIndicatorImage = UIImage(named: "")
+    

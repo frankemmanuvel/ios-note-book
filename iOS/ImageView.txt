@@ -1,0 +1,20 @@
+1. load image from url
+
+        // Coordinates
+        let webImageView_X : CGFloat = 197
+        let webImageView_Y : CGFloat = 477
+        let webImageView_Size : CGFloat = 115
+        
+        // ImageView programmatically to load pic from url
+        let webImageView = UIImageView(frame: CGRect(x: webImageView_X, y: webImageView_Y, width: webImageView_Size, height: webImageView_Size))
+        
+        // load picture from URL
+        let url = URL(string: "http://farm6.static.flickr.com/5108/5642460689_c1c5755e76.jpg")!
+        let data = try! Data(contentsOf: url)
+        let imageFromURL = UIImage(data: data)
+        
+        webImageView.image = imageFromURL
+        
+        self.view.addSubview(webImageView)
+        
+2. 

@@ -1,0 +1,235 @@
+TableView
+=========
+
+1. Adding a TableView for an existing View Controller.
+2. Set prototype cells to 1
+3. Set cell type .Basic .RightDetail .LeftDetail .Subtitle
+4. Set cell identifier to 'Cell'
+5. Adding Protocols
+    UITableViewDataSource
+    UITableViewDelegate
+    
+UITableViewDataSource
+=====================
+
+How many tables sections?
+How many table raws do you have?
+What do you want to display at raw index?
+What is the title of the section?
+
+UITableViewDelegate
+===================
+
+raw heigt ?
+Height of the header section?
+level ofindecation for raw x?
+Appearance ?
+
+6. Implement the method
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return restaurants.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cellIdentifier = "Cell"
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
+        
+        cell.textLabel?.text = restaurants[indexPath.row].name
+        cell.imageView?.image = UIImage(named: "restaurant")
+        return cell
+    }
+    
+    
+ Using TableviewController
+ =========================
+ 
+1. Tick isInitialViewController
+2. Create custom Controller implementing : UITableViewController
+3. Select cell type to Custom
+4. Adjust row height selecting tableView
+5. Adjust cell height selecting cell
+6. Create a custom class for cell implementing : UITableViewCell 
+7. connect the variables to the custom class.
+    class RestaurantTableViewCell: UITableViewCell {
+    
+    
+    @IBOutlet weak var thumbnailImage: UIImageView!
+    
+    @IBOutlet weak var nameLabel: UILabel!
+
+    @IBOutlet weak var locationLabel: UILabel!
+    
+    @IBOutlet weak var typeLabel: UILabel!
+    
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        // Initialization code
+    }
+
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+
+        // Configure the view for the selected state
+    }
+
+}
+
+8.  downcast the cell
+    let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! RestaurantTableViewCell
+    
+
+Managing Table View Raw selections
+==================================
+
+1. overide did select row method
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+    }
+
+2. Deselect selected raw 
+
+    tableView.deselectRow(at: indexPath, animated: false)
+
+3. add selct checkmark
+
+    let cell = tableView.cellForRow(at: indexPath)
+    self.restaurants[indexPath.row].isVisited = true
+    cell?.accessoryType = .checkmark
+    
+    // select and uncheck 
+    
+    let checkinAction = UIAlertAction(title: "Check in", style: .default, handler: {
+            (action : UIAlertAction!) -> Void in
+
+            let cell = tableView.cellForRow(at: indexPath)
+            self.restaurants[indexPath.row].isVisited = true
+            cell?.accessoryType = .checkmark
+        })
+        
+        let undoCheckin = UIAlertAction(title: "Undo Check in", style: .default, handler: {
+            (action : UIAlertAction!) -> Void in
+            
+            let cell = tableView.cellForRow(at: indexPath)
+            self.restaurants[indexPath.row].isVisited = false
+            cell?.accessoryType = .none
+        })
+
+4. Solve the cell reusable error
+    - check before returning the cell in method cellForRowAtIndexpath
+    
+    cell.accessoryType = restaurants[indexPath.row].isVisited ? .checkmark : .none
+    
+5. Add swipe to delete function
+
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            self.restaurants.remove(at: indexPath.row)
+        }
+    }
+    
+6. Reload table
+
+    tableView.reloadData()
+    
+7. Delete and reload the current row
+
+    tableView.deleteRows(at: [indexPath], with: .left)
+    
+8. Add additional action button for table view swipe
+
+    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
+        //social sharing button
+        let shareAction = UITableViewRowAction(style: .default, title: "Share", handler: {
+            (action , indexPath) -> Void in
+            
+            let defaultText = "Just checkin in at \(self.restaurants[indexPath.row].name)"
+            let activityController = UIActivityViewController(activityItems: [defaultText], applicationActivities: nil)
+            self.present(activityController, animated: true, completion: nil)
+        })
+        
+        //Delete Button
+        let deleteAction = UITableViewRowAction(style: .default, title: "Delete", handler: {
+        (action , indexPath) -> Void in
+            self.restaurants.remove(at: indexPath.row)
+            self.tableView.deleteRows(at: [indexPath], with: .fade)
+        })
+        
+        return [deleteAction , shareAction]
+        
+    }
+    
+9. Chane coller of swipe buttons (share ,  delete)
+
+     shareAction.backgroundColor = UIColor(red: 79.0/255.0, green: 214.0/255.0, blue: 255.0/255.0, alpha: 1.0)
+     
+10. change table view background Color
+
+    - in view did load
+        tableView.backgroundColor = UIColor(red: 240.0/255.0, green: 240.0/255.0, blue: 240.0/255.0, alpha: 0.2)
+        
+    - in cell for row at indexPath
+         cell.backgroundColor = UIColor(red: 240.0/255.0, green: 240.0/255.0, blue: 240.0/255.0, alpha: 0.2)
+         
+11. change table view seperator color
+
+    tableView.separatorColor = UIColor(red: 240.0/255.0, green: 240.0/255.0, blue: 240.0/255.0, alpha: 0.2)
+    
+    or
+    
+    cell.backgroundColor = UIColor.clear
+    
+12. remove umwanted seperators
+
+    tableView.tableFooterView = UIView(frame: CGRect.zero)
+    
+13. Self sizing cells
+
+    - Add auto layot constraints (using stak views)
+    - define an estimated row height
+    - set UITableViewAutomaticDimension
+    
+    tableView.estimatedRowHeight = 36.0
+    tableView.rowHeight = UITableViewAutomaticDimension
+    * set label row count to 0
+    
+14. Dynamic Fonts sizes
+
+    - use standard font styles
+    
+
+Creating Static table views
+===========================
+
+1. Select table view controller
+2. Select the table view form the document outline and chande its content to static cells
+3. Select table view section from the doument outline and change the Row count
+4. Slect rows and chane the selet option to none
+5. 
+
+
+
+
+
+table view row select segue
+===========================
+
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showRestaurantDetail" {
+            if let indexPath = tableView.indexPathForSelectedRow {
+                let destinationController = segue.destination as! RestaurantDetailViewController
+                destinationController.restaurantImage = restaurantImages[indexPath.row]
+            }
+        }
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
